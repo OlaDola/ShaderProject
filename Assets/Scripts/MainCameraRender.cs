@@ -2,24 +2,58 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class MainCameraRender : MonoBehaviour
 {
-   [SerializeField]
-    PortalScript[] portals;
+    [SerializeField]
+    private PortalScript[] portals;
 
-    void Awake () {
+    private void Awake()
+    {
         portals = FindObjectsOfType<PortalScript>();
     }
 
-    
-
-    // Unity calls the methods in this delegate's invocation list before rendering any camera
-    void OnPreCull()
+    private void OnEnable()
     {
-        for (int i = 0; i < portals.Length; i++){
-            portals[i].Render();
+        // Subscribe to the URP render pipeline event
+        RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+        RenderPipelineManager.beginFrameRendering += OnBeginFrameRendering;
+        RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
+    }
+
+    private void OnDisable()
+    {
+        // Unsubscribe from the URP render pipeline event
+        RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+        RenderPipelineManager.beginFrameRendering -= OnBeginFrameRendering;
+        RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
+    }
+
+   private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+    {
+        // Only render portals for the main camera
+        if (camera.CompareTag("MainCamera"))
+        {
+            for (int i = 0; i < portals.Length; i++)
+            {
+                portals[i].Render(context);
+            }
         }
     }
 
+    private void OnBeginFrameRendering(ScriptableRenderContext context, Camera[] camera){
+        for (int i = 0; i < portals.Length; i++)
+        {
+            portals[i].PrePortalRender();
+        }
+    }
+
+    private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
+    {
+        for (int i = 0; i < portals.Length; i++)
+        {
+            portals[i].PostPortalRender();
+        }
+    }
 }

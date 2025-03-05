@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FPSController : MonoBehaviour {
+public class FPSController : PortalTraveller {
 
     public float walkSpeed = 3;
     public float runSpeed = 6;
@@ -113,15 +113,15 @@ public class FPSController : MonoBehaviour {
 
     }
 
-    // public override void Teleport (Transform fromPortal, Transform toPortal, Vector3 pos, Quaternion rot) {
-    //     transform.position = pos;
-    //     Vector3 eulerRot = rot.eulerAngles;
-    //     float delta = Mathf.DeltaAngle (smoothYaw, eulerRot.y);
-    //     yaw += delta;
-    //     smoothYaw += delta;
-    //     transform.eulerAngles = Vector3.up * smoothYaw;
-    //     velocity = toPortal.TransformVector (fromPortal.InverseTransformVector (velocity));
-    //     Physics.SyncTransforms ();
-    // }
+    public override void Teleport (Transform fromPortal, Transform toPortal, Vector3 pos, Quaternion rot) {
+        transform.position = pos;
+        Vector3 eulerRot = rot.eulerAngles;
+        float delta = Mathf.DeltaAngle (smoothYaw, eulerRot.y);
+        yaw += delta;
+        smoothYaw += delta;
+        transform.eulerAngles = Vector3.up * smoothYaw;
+        velocity = toPortal.TransformVector (fromPortal.InverseTransformVector (velocity));
+        Physics.SyncTransforms ();
+    }
 
 }
