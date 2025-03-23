@@ -3,6 +3,8 @@ Shader "Unlit/PortalShaderCut"
     Properties
     {
 		_MainTex("Main Texture", 2D) = "white" {}
+		_InactiveColour ("Inactive Colour", Color) = (1, 1, 1, 1)
+		displayMask ("Display Mask", Int) = 1
     }
     SubShader
     {
@@ -12,15 +14,18 @@ Shader "Unlit/PortalShaderCut"
 			// "Queue" = "Geometry"
 			"RenderPipeline" = "UniversalPipeline"
 		}
+		
 
 		HLSLINCLUDE
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderVariablesFunctions.hlsl"
 		ENDHLSL
 
         Pass
         {
 			Name "Mask"
-
+			LOD 100
+			Cull Off
 			Stencil
 			{
 				Ref 1
@@ -35,6 +40,13 @@ Shader "Unlit/PortalShaderCut"
 				{
 					float4 vertex : POSITION;
 				};
+
+				// float4 _MainTex_ST;
+				CBUFFER_START(UnityPerMaterial)
+				float4 _MainTex_ST;
+				float4 _InactiveColour;
+				int displayMask;
+				CBUFFER_END
 
 				struct v2f
 				{
@@ -56,7 +68,7 @@ Shader "Unlit/PortalShaderCut"
 				{
 					float2 uv = i.screenPos.xy / i.screenPos.w;
 					float4 col = tex2D(_MainTex, uv);
-					return col;
+					return col * displayMask + _InactiveColour * (1-displayMask);
 				}
 			ENDHLSL
         }

@@ -18,16 +18,16 @@ public class MainCameraRender : MonoBehaviour
     {
         // Subscribe to the URP render pipeline event
         RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-        RenderPipelineManager.beginFrameRendering += OnBeginFrameRendering;
-        RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
+        // RenderPipelineManager.beginFrameRendering += OnBeginFrameRendering;
+        // RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
     }
 
     private void OnDisable()
     {
         // Unsubscribe from the URP render pipeline event
         RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
-        RenderPipelineManager.beginFrameRendering -= OnBeginFrameRendering;
-        RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
+        // RenderPipelineManager.beginFrameRendering -= OnBeginFrameRendering;
+        // RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
     }
 
    private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
@@ -37,7 +37,15 @@ public class MainCameraRender : MonoBehaviour
         {
             for (int i = 0; i < portals.Length; i++)
             {
+                portals[i].PrePortalRender();
+            }
+            for (int i = 0; i < portals.Length; i++)
+            {
                 portals[i].Render(context);
+            }
+            for (int i = 0; i < portals.Length; i++)
+            {
+                portals[i].PostPortalRender();
             }
         }
     }

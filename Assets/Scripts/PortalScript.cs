@@ -32,6 +32,8 @@ public class PortalScript : MonoBehaviour
     List<PortalTraveller> trackedTravellers;
 
     MeshFilter screenMeshFilter;
+    [SerializeField]
+    Vector3 offsetFromPortalToCam;
 
 
     void Awake()
@@ -45,11 +47,11 @@ public class PortalScript : MonoBehaviour
         screenMeshFilter = screen.GetComponent<MeshFilter> ();
     }
 
-    private void Update()
-    {
-        var m = transform.localToWorldMatrix * otherPortal.transform.worldToLocalMatrix * playerCamera.transform.localToWorldMatrix;
-        portalCamera.transform.SetPositionAndRotation(m.GetColumn(3), m.rotation);
-    }
+    // private void Update()
+    // {
+    //     var m = transform.localToWorldMatrix * otherPortal.transform.worldToLocalMatrix * playerCamera.transform.localToWorldMatrix;
+    //     portalCamera.transform.SetPositionAndRotation(m.GetColumn(3), m.rotation);
+    // }
 
     void LateUpdate(){
         for (int i = 0; i < trackedTravellers.Count; i++){
@@ -62,13 +64,19 @@ public class PortalScript : MonoBehaviour
             int portalSideOld = System.Math.Sign(Vector3.Dot(traveller.previousOffsetFromPortal, transform.forward));
 
             if (portalSide != portalSideOld){
+                var positionOld = travellerT.position;
+                var rotOld = travellerT.rotation;
 
-                traveller.Teleport (transform, otherPortal.transform, m.GetColumn (3), m.rotation);
+                traveller.Teleport(transform, otherPortal.transform, m.GetColumn(3), m.rotation);
+                
+                traveller.graphicsClone.transform.SetPositionAndRotation (positionOld, rotOld);
                 otherPortal.OnTravellerEnterPortal(traveller);
                 trackedTravellers.RemoveAt(i);
                 i--;
             }
             else{
+                traveller.graphicsClone.transform.SetPositionAndRotation (m.GetColumn (3), m.rotation);
+                UpdateSliceParams (traveller);
                 traveller.previousOffsetFromPortal = offsetFromPortal;
             }
         }
@@ -177,7 +185,8 @@ public class PortalScript : MonoBehaviour
             }
         }
 
-        var offsetFromPortalToCam = portalCamPos - transform.position;
+        offsetFromPortalToCam = portalCamPos - transform.position;
+        // print("offsetFromPortalToCam: "+ offsetFromPortalToCam);
         foreach(var linkedTraveller in otherPortal.trackedTravellers){
             var travellerPos = linkedTraveller.graphicsObject.transform.position;
             var clonePos = linkedTraveller.graphicsClone.transform.position;
@@ -211,7 +220,7 @@ public class PortalScript : MonoBehaviour
         Transform screenT = screen.transform;
         bool camFacingSameDirAsPortal = Vector3.Dot(transform.forward, transform.position - viewPoint) > 0;
         screenT.localScale = new Vector3(screenT.localScale.x, screenT.localScale.y, screenThickness);
-        screenT.localPosition =  screenThickness * Vector3.forward * ((camFacingSameDirAsPortal) ? 0.5f : -0.5f);
+        screenT.localPosition = Vector3.forward * screenThickness * ((camFacingSameDirAsPortal) ? 0.5f : -0.5f);
         return screenThickness;
     }
 
@@ -241,17 +250,9 @@ public class PortalScript : MonoBehaviour
 
         // Apply parameters
         for (int i = 0; i < portalTraveller.originalMaterials.Length; i++){
-            // print("SliceCentre Before: " + slicePos);
             portalTraveller.originalMaterials[i].SetVector("sliceCentre", slicePos);
-            // print("SliceCentre After: " + portalTraveller.originalMaterials[i].GetVector("sliceCentre"));
-
-            // print("SliceNormal Before: " + sliceNormal);
             portalTraveller.originalMaterials[i].SetVector("sliceNormal", sliceNormal);
-            // print("SliceNormal After: " + portalTraveller.originalMaterials[i].GetVector("sliceNormal"));
-
-            // print("SliceOffsetDst Before: " + sliceOffsetDst);
             portalTraveller.originalMaterials[i].SetFloat("sliceOffsetDst", sliceOffsetDst);
-            // print("SliceOffsetDst After: " + portalTraveller.originalMaterials[i].GetFloat("sliceOffsetDst"));
 
             portalTraveller.cloneMaterials[i].SetVector("sliceCentre", cloneSlicePos);
             portalTraveller.cloneMaterials[i].SetVector("sliceNormal", cloneSliceNormal);
@@ -274,9 +275,11 @@ public class PortalScript : MonoBehaviour
 
         // Don't use oblique clip plane if very close to portal as it can cause issues with precision
         if (Mathf.Abs(camSpaceDst) > nearClipLimit) {
-            Vector4 clipPlaneCameraSpace = new(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDst);
+            // print("Setting near clip plane:"+ this.name);
+            Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDst);
             portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
         } else {
+            // print("Not setting near clip plane:" + this.name);
             portalCamera.projectionMatrix = playerCamera.projectionMatrix;
         }
     }

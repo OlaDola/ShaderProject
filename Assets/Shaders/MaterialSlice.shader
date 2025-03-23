@@ -13,7 +13,7 @@ Shader "Custom/SliceURP"
     }
     SubShader
     {
-        Tags { "RenderType" = "Opaque" "Queue" = "Geometry" }
+        Tags { "RenderType" = "Gemometry" "Queue" = "Geometry" "IgnoreProjector" = "True" "RenderPipeline" = "UniversalPipeline" }
         LOD 200
 
         Pass

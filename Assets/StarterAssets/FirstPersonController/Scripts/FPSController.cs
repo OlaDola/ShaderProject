@@ -16,6 +16,12 @@ public class FPSController : PortalTraveller {
     public float rotationSmoothTime = 0.1f;
 
     CharacterController controller;
+    
+    [SerializeField]
+    GameObject playerParent;
+
+    Rigidbody rb;
+
     Camera cam;
     public float yaw;
     public float pitch;
@@ -34,6 +40,8 @@ public class FPSController : PortalTraveller {
     float lastGroundedTime;
     bool disabled;
 
+    public bool doTeleport = true;
+
     void Start () {
         cam = Camera.main;
         if (lockCursor) {
@@ -41,7 +49,8 @@ public class FPSController : PortalTraveller {
             Cursor.visible = false;
         }
 
-        controller = GetComponent<CharacterController> ();
+        // controller = playerParent.GetComponent<CharacterController> ();
+        rb = playerParent.GetComponent<Rigidbody> ();
 
         yaw = transform.eulerAngles.y;
         pitch = cam.transform.localEulerAngles.x;
@@ -49,7 +58,7 @@ public class FPSController : PortalTraveller {
         smoothPitch = pitch;
     }
 
-    void Update () {
+    void FixedUpdate () {
         if (Input.GetKeyDown (KeyCode.P)) {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
@@ -73,24 +82,26 @@ public class FPSController : PortalTraveller {
         float currentSpeed = (Input.GetKey (KeyCode.LeftShift)) ? runSpeed : walkSpeed;
         Vector3 targetVelocity = worldInputDir * currentSpeed;
         velocity = Vector3.SmoothDamp (velocity, targetVelocity, ref smoothV, smoothMoveTime);
-
-        verticalVelocity -= gravity * Time.deltaTime;
-        velocity = new Vector3 (velocity.x, verticalVelocity, velocity.z);
-
-        var flags = controller.Move (velocity * Time.deltaTime);
-        if (flags == CollisionFlags.Below) {
-            jumping = false;
-            lastGroundedTime = Time.time;
-            verticalVelocity = 0;
+        if(Vector3.Distance(transform.position, velocity*Time.fixedDeltaTime)<0.001f ){
+            velocity = Vector3.zero;
         }
+        rb.MovePosition(transform.position + velocity * Time.fixedDeltaTime);
 
-        if (Input.GetKeyDown (KeyCode.Space)) {
-            float timeSinceLastTouchedGround = Time.time - lastGroundedTime;
-            if (controller.isGrounded || (!jumping && timeSinceLastTouchedGround < 0.15f)) {
-                jumping = true;
-                verticalVelocity = jumpForce;
-            }
-        }
+
+        // var flags = controller.Move (velocity * Time.deltaTime);
+        // if (flags == CollisionFlags.Below) {
+        //     jumping = false;
+        //     lastGroundedTime = Time.time;
+        //     verticalVelocity = 0;
+        // }
+
+        // if (Input.GetKeyDown (KeyCode.Space)) {
+        //     float timeSinceLastTouchedGround = Time.time - lastGroundedTime;
+        //     if (controller.isGrounded || (!jumping && timeSinceLastTouchedGround < 0.15f)) {
+        //         jumping = true;
+        //         verticalVelocity = jumpForce;
+        //     }
+        // }
 
         float mX = Input.GetAxisRaw ("Mouse X");
         float mY = Input.GetAxisRaw ("Mouse Y");
@@ -103,25 +114,36 @@ public class FPSController : PortalTraveller {
         }
 
         yaw += mX * mouseSensitivity;
+        yaw = NormalizeAngle(yaw);
         pitch -= mY * mouseSensitivity;
         pitch = Mathf.Clamp (pitch, pitchMinMax.x, pitchMinMax.y);
         smoothPitch = Mathf.SmoothDampAngle (smoothPitch, pitch, ref pitchSmoothV, rotationSmoothTime);
         smoothYaw = Mathf.SmoothDampAngle (smoothYaw, yaw, ref yawSmoothV, rotationSmoothTime);
 
-        transform.eulerAngles = Vector3.up * smoothYaw;
+        transform.localEulerAngles = Vector3.up * smoothYaw;
         cam.transform.localEulerAngles = Vector3.right * smoothPitch;
 
     }
 
     public override void Teleport (Transform fromPortal, Transform toPortal, Vector3 pos, Quaternion rot) {
-        transform.position = pos;
+        if(!doTeleport)
+            return;
+        playerParent.transform.position = pos;
+        Quaternion portalRotationDifference = toPortal.rotation * Quaternion.Inverse(fromPortal.rotation);
+        
+        playerParent.transform.rotation = portalRotationDifference * playerParent.transform.rotation;
+        cam.transform.rotation = portalRotationDifference * cam.transform.rotation;
+
         Vector3 eulerRot = rot.eulerAngles;
         float delta = Mathf.DeltaAngle (smoothYaw, eulerRot.y);
-        yaw += delta;
-        smoothYaw += delta;
-        transform.eulerAngles = Vector3.up * smoothYaw;
+        
+        transform.localEulerAngles = Vector3.up * smoothYaw;
         velocity = toPortal.TransformVector (fromPortal.InverseTransformVector (velocity));
         Physics.SyncTransforms ();
     }
-
+    float NormalizeAngle(float angle) {
+        while (angle > 180) angle -= 360;
+        while (angle < -180) angle += 360;
+        return angle;
+    }
 }
