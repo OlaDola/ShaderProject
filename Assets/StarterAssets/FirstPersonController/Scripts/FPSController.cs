@@ -128,16 +128,16 @@ public class FPSController : PortalTraveller {
     public override void Teleport (Transform fromPortal, Transform toPortal, Vector3 pos, Quaternion rot) {
         if(!doTeleport)
             return;
-        playerParent.transform.position = pos;
-        Quaternion portalRotationDifference = toPortal.rotation * Quaternion.Inverse(fromPortal.rotation);
         
+        Quaternion portalRotationDifference = toPortal.rotation * Quaternion.Inverse(fromPortal.rotation);
+        // cam.transform.rotation = portalRotationDifference * cam.transform.rotation;
         playerParent.transform.rotation = portalRotationDifference * playerParent.transform.rotation;
-        cam.transform.rotation = portalRotationDifference * cam.transform.rotation;
+        playerParent.transform.position = pos;
 
         Vector3 eulerRot = rot.eulerAngles;
         float delta = Mathf.DeltaAngle (smoothYaw, eulerRot.y);
         
-        transform.localEulerAngles = Vector3.up * smoothYaw;
+        // transform.localEulerAngles = Vector3.up * smoothYaw;
         velocity = toPortal.TransformVector (fromPortal.InverseTransformVector (velocity));
         Physics.SyncTransforms ();
     }

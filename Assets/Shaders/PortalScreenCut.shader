@@ -14,7 +14,8 @@ Shader "Unlit/PortalShaderCut"
 			// "Queue" = "Geometry"
 			"RenderPipeline" = "UniversalPipeline"
 		}
-		
+		LOD 100
+		Cull Off
 
 		HLSLINCLUDE
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -24,8 +25,7 @@ Shader "Unlit/PortalShaderCut"
         Pass
         {
 			Name "Mask"
-			LOD 100
-			Cull Off
+			
 			Stencil
 			{
 				Ref 1
