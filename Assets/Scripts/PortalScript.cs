@@ -1,11 +1,29 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 public class PortalScript : MonoBehaviour
 {
+    [System.Serializable]
+    class VisiblePortal{
+        public PortalScript portal;
+        public bool isVisible;
+        public PortalScript visibileFromPortal;
+
+        // public string name;
+        public VisiblePortal(PortalScript portal, bool isVisible, PortalScript visibileFromPortal = null){
+            this.visibileFromPortal = visibileFromPortal;
+            this.portal = portal;
+            this.isVisible = isVisible;
+
+            // name = portal.name;
+        }
+    }
+
     [SerializeField]
     PortalScript otherPortal;
 
@@ -34,7 +52,24 @@ public class PortalScript : MonoBehaviour
     MeshFilter screenMeshFilter;
     [SerializeField]
     Vector3 offsetFromPortalToCam;
+    
+    [SerializeField]
+    Dictionary<string, VisiblePortal> AllPortals;
 
+    // [SerializeField]
+    // string[] visiblePortalNames;
+
+    [SerializeField]
+    LayerMask layerScreen;
+
+    [SerializeField]
+    bool materialSetup = false;
+
+    [SerializeField]
+    bool isVisible = false;
+
+    [SerializeField]
+    bool showDebugLines = false;
 
     void Awake()
     {
@@ -45,8 +80,38 @@ public class PortalScript : MonoBehaviour
         screen = ScreenObject.GetComponent<MeshRenderer>();
         trackedTravellers = new List<PortalTraveller> ();
         screenMeshFilter = screen.GetComponent<MeshFilter> ();
+
+        if (otherPortal == null) {
+            Debug.LogError("Other portal is not assigned!");
+        }
+
+        
+
+        // VisiblePortals = VisiblePortals.Where(p =>
+        // {
+        //     if (this == p)
+        //         return false;
+
+        //     return CanSee(portalCamera, p, true);
+        // }).ToArray();
     }
 
+    void Start(){
+        // layerScreen = screen.gameObject.layer;
+        print("Layer: " + layerScreen);
+        var Portals = FindObjectsOfType<PortalScript>(true);
+        AllPortals = new Dictionary<string, VisiblePortal>();
+        for (int i = 0; i < Portals.Length; i++){
+            if (Portals[i] == this){
+                continue;
+            }
+            if(AllPortals.ContainsKey(Portals[i].name)){
+                Debug.LogError("Duplicate portal name: " + Portals[i].name);
+                continue;
+            }
+            AllPortals.Add(Portals[i].name, new VisiblePortal(Portals[i], false));
+        }
+    }
     // private void Update()
     // {
     //     var m = transform.localToWorldMatrix * otherPortal.transform.worldToLocalMatrix * playerCamera.transform.localToWorldMatrix;
@@ -67,7 +132,12 @@ public class PortalScript : MonoBehaviour
                 var positionOld = travellerT.position;
                 var rotOld = travellerT.rotation;
 
-                traveller.Teleport(transform, otherPortal.transform, m.GetColumn(3), m.rotation);
+                Vector3 scaleRatio = new Vector3(
+                    otherPortal.transform.parent.localScale.x / transform.parent.localScale.x,
+                    otherPortal.transform.parent.localScale.y / transform.parent.localScale.y,
+                    otherPortal.transform.parent.localScale.z / transform.parent.localScale.z
+                );
+                traveller.Teleport(transform, otherPortal.transform, m.GetColumn(3), m.rotation, scaleRatio);
                 
                 traveller.graphicsClone.transform.SetPositionAndRotation (positionOld, rotOld);
                 otherPortal.OnTravellerEnterPortal(traveller);
@@ -87,6 +157,22 @@ public class PortalScript : MonoBehaviour
         return GeometryUtility.TestPlanesAABB(planes, renderer.bounds);
     }
 
+    bool CanSeePortal(Camera from, PortalScript other)
+    {
+        // Is the portal in the camera's view frustum?
+        if (!GeometryUtility.TestPlanesAABB(GeometryUtility.CalculateFrustumPlanes(from), other.screen.bounds))
+            return false;
+
+        // Debug.DrawRay(from.transform.position, (other.transform.position - from.transform.position).normalized, Color.blue, 0.1f);
+        if (!Physics.Raycast(from.transform.position, (other.transform.position - from.transform.position).normalized, out var hit, Mathf.Infinity, ~layerScreen))
+            return false;
+
+        if(showDebugLines)
+            Debug.DrawLine(from.transform.position, hit.point, Color.red, 0.1f);
+        return Vector3.Distance(hit.transform.position, other.transform.position) < 0.001f;
+
+    }
+
     // Called before any portal cameras are rendered for the current frame
     public void PrePortalRender () {
         foreach (var traveller in trackedTravellers) {
@@ -103,10 +189,34 @@ public class PortalScript : MonoBehaviour
         ProtectScreenFromClipping (playerCamera.transform.position);
     }
 
-    public void Render (ScriptableRenderContext context) {
+    public void Render(ScriptableRenderContext context)
+    {
+        // bool isVisible;
+        // foreach (var portal in AllPortals)
+        // {
+        //     if (portal.Value.portal != this)
+        //     {
+        //         isVisible = CanSeePortal(otherPortal.portalCamera, portal.Value.portal);
+        //         if (isVisible)
+        //         {
+        //             portal.Value.isVisible = true;
+        //             portal.Value.visibileFromPortal = this;
+        //             portal.Value.portal.isVisible = true;
+        //         }
+        //         else
+        //         {
+        //             if (portal.Value.visibileFromPortal == this)
+        //             {
+        //                 portal.Value.isVisible = false;
+        //                 portal.Value.visibileFromPortal = null;
+        //                 portal.Value.portal.isVisible = false;
+        //             }
+        //         }
+        //     }
+        // }
 
-        // Skip rendering the view from this portal if player is not looking at the linked portal
-        if (!CameraUtility.VisibleFromCamera (otherPortal.screen, playerCamera)) {
+        if (!CameraUtility.VisibleFromCamera(otherPortal.screen, playerCamera))
+        {
             return;
         }
 
@@ -118,41 +228,75 @@ public class PortalScript : MonoBehaviour
 
         int startIndex = 0;
         portalCamera.projectionMatrix = playerCamera.projectionMatrix;
-        for (int i = 0; i < recursionLimit; i++) {
-            if (i > 0) {
-                // No need for recursive rendering if linked portal is not visible through this portal
-                if (!CameraUtility.BoundsOverlap (screenMeshFilter, otherPortal.screenMeshFilter, portalCamera)) {
+        for (int i = 0; i < recursionLimit; i++)
+        {
+            if (i > 0)
+            {
+                if (!CameraUtility.BoundsOverlap(screenMeshFilter, otherPortal.screenMeshFilter, portalCamera))
+                {
                     break;
                 }
             }
             localToWorldMatrix = transform.localToWorldMatrix * otherPortal.transform.worldToLocalMatrix * localToWorldMatrix;
             int renderOrderIndex = recursionLimit - i - 1;
-            renderPositions[renderOrderIndex] = localToWorldMatrix.GetColumn (3);
+            renderPositions[renderOrderIndex] = localToWorldMatrix.GetColumn(3);
             renderRotations[renderOrderIndex] = localToWorldMatrix.rotation;
 
-            portalCamera.transform.SetPositionAndRotation (renderPositions[renderOrderIndex], renderRotations[renderOrderIndex]);
+            portalCamera.transform.SetPositionAndRotation(renderPositions[renderOrderIndex], renderRotations[renderOrderIndex]);
             startIndex = renderOrderIndex;
         }
 
-        // Hide screen so that camera can see through portal
-        screen.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-        // print("Hide screen");
-        otherPortal.screen.material.SetInt("_DisplayMask", 0); // Hide
+        // foreach (var portal in AllPortals)
+        // {
+        //     if (portal.Value.portal != this && portal.Value.isVisible)
+        //     {
+        //         RenderRecursive(context, portal.Value.portal, recursionLimit - 1);
+        //     }
+        // }
 
-        for (int i = startIndex; i < recursionLimit; i++) {
-            portalCamera.transform.SetPositionAndRotation (renderPositions[i], renderRotations[i]);
+        screen.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+        otherPortal.screen.material.SetInt("_DisplayMask", 0);
+
+        for (int i = startIndex; i < recursionLimit; i++)
+        {
+            portalCamera.transform.SetPositionAndRotation(renderPositions[i], renderRotations[i]);
             SetNearClipPlane();
             HandleCliping();
             UniversalRenderPipeline.RenderSingleCamera(context, portalCamera);
 
-            if (i == startIndex) {
-                // print("Show screen");
-                otherPortal.screen.material.SetInt("_DisplayMask", 1); // Show
+            if (i == startIndex)
+            {
+                otherPortal.screen.material.SetInt("_DisplayMask", 1);
             }
         }
 
-        // Unhide objects hidden at start of render
         screen.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+    }
+
+    private void RenderRecursive(ScriptableRenderContext context, PortalScript portal, int remainingRecursions)
+    {
+        if (remainingRecursions <= 0 || !portal.isVisible)
+        {
+            return;
+        }
+
+        var portalCameraL_T_W_Matrix = portal.otherPortal.transform.localToWorldMatrix * portal.transform.worldToLocalMatrix * otherPortal.portalCamera.transform.localToWorldMatrix;
+        var portalCamPos = portalCameraL_T_W_Matrix.GetColumn(3);
+        var portalCamRot = portalCameraL_T_W_Matrix.rotation;
+
+        portal.otherPortal.portalCamera.transform.SetPositionAndRotation(portalCamPos, portalCamRot);
+        portal.otherPortal.SetNearClipPlane();
+        portal.otherPortal.HandleCliping();
+
+        UniversalRenderPipeline.RenderSingleCamera(context, portal.otherPortal.portalCamera);
+
+        foreach (var subPortal in portal.AllPortals)
+        {
+            if (subPortal.Value.portal != portal && subPortal.Value.isVisible)
+            {
+                RenderRecursive(context, subPortal.Value.portal, remainingRecursions - 1);
+            }
+        }
     }
 
     void HandleCliping(){
@@ -263,33 +407,49 @@ public class PortalScript : MonoBehaviour
 
     // Use custom projection matrix to align portal camera's near clip plane with the surface of the portal
     // Note that this affects precision of the depth buffer, which can cause issues with effects like screenspace AO    
-    void SetNearClipPlane(){
-        // Learning resource:
-        // http://www.terathon.com/lengyel/Lengyel-Oblique.pdf
+    void SetNearClipPlane() {
         Transform clipPlane = transform;
-        int dot = System.Math.Sign(Vector3.Dot(clipPlane.forward, transform.position - portalCamera.transform.position));
+        int dot = (int)Mathf.Sign(Vector3.Dot(clipPlane.forward, transform.position - portalCamera.transform.position));
 
         Vector3 camSpacePos = portalCamera.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
         Vector3 camSpaceNormal = portalCamera.worldToCameraMatrix.MultiplyVector(clipPlane.forward) * dot;
         float camSpaceDst = -Vector3.Dot(camSpacePos, camSpaceNormal) + nearClipOffset;
 
-        // Don't use oblique clip plane if very close to portal as it can cause issues with precision
         if (Mathf.Abs(camSpaceDst) > nearClipLimit) {
-            // print("Setting near clip plane:"+ this.name);
             Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDst);
-            portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
-        } else {
-            // print("Not setting near clip plane:" + this.name);
-            portalCamera.projectionMatrix = playerCamera.projectionMatrix;
+            
+            // Get the oblique matrix
+            Matrix4x4 obliqueMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
+            
+            // Validate the matrix before applying
+            if (IsValidProjectionMatrix(obliqueMatrix)) {
+                portalCamera.projectionMatrix = obliqueMatrix;
+                return;
+            }
         }
+    
+        // Fallback to standard projection if oblique would be invalid
+        portalCamera.projectionMatrix = playerCamera.projectionMatrix;
+    }
+
+    bool IsValidProjectionMatrix(Matrix4x4 matrix) {
+        // Check for NaN values in critical matrix components
+        for (int i = 0; i < 16; i++) {
+            if (float.IsNaN(matrix[i])) return false;
+        }
+        
+        // Additional checks can be added here if needed
+        return true;
     }
 
     void CreateTexture()
     {
         // print("Creating texture");
 
+        if (materialSetup) return; // Avoid setting up the material multiple times
+
         // Check for null references
-        if (portalCamera == null || otherPortal == null || otherPortal.screen == null)
+        if (portalCamera == null || otherPortal == null || otherPortal.screen == null || otherPortal.screen.material == null)
         {
             Debug.LogError("PortalCamera, OtherPortal, or Screen is not assigned!");
             return;
@@ -298,14 +458,12 @@ public class PortalScript : MonoBehaviour
         // Release existing render texture
         if (portalCamera.targetTexture != null)
         {
-            portalCamera.targetTexture.Release();
+            RenderTexture.ReleaseTemporary(portalCamera.targetTexture);
         }
 
         // Create new render texture
-        RenderTexture rt = new(Screen.width, Screen.height, 24) // Use 24-bit depth buffer
-        {
-            name = gameObject.name + " RenderTexture"
-        };
+        RenderTexture rt = RenderTexture.GetTemporary(Screen.width, Screen.height, 24); // Use 24-bit depth buffer
+        rt.name = gameObject.name + " RenderTexture";
         portalCamera.targetTexture = rt;
 
         // Create material
@@ -335,6 +493,8 @@ public class PortalScript : MonoBehaviour
         // Assign material to portal screen
         mat.name = gameObject.name + " Material";
         otherPortal.screen.material = mat;
+
+        materialSetup = true; // Mark material as set up
     }
 
 

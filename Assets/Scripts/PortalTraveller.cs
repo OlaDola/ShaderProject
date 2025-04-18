@@ -12,10 +12,11 @@ public class PortalTraveller : MonoBehaviour
     public Material[] originalMaterials { get; set; }
     public Material[] cloneMaterials { get; set; }
 
-    public virtual void Teleport(Transform fromPortal, Transform toPortal, Vector3 pos, Quaternion rot)
+    public virtual void Teleport(Transform fromPortal, Transform toPortal, Vector3 pos, Quaternion rot, Vector3 scale)
     {
         transform.position = pos;
         transform.rotation = rot;
+        transform.localScale = scale;
     }
 
     public virtual void EnterPortalThreshold()
