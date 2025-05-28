@@ -26,6 +26,11 @@ public class PortalScript : MonoBehaviour
 
     [SerializeField]
     PortalScript otherPortal;
+    public PortalScript OtherPortal
+    {
+        get => otherPortal;
+        set => otherPortal = value;
+    }
 
     [SerializeField]
     Camera portalCamera;
@@ -71,6 +76,9 @@ public class PortalScript : MonoBehaviour
     [SerializeField]
     bool showDebugLines = false;
 
+    [SerializeField]
+    Vector3 scaleRatio;
+
     void Awake()
     {
         // portalCamera.enabled = false;
@@ -81,10 +89,23 @@ public class PortalScript : MonoBehaviour
         trackedTravellers = new List<PortalTraveller> ();
         screenMeshFilter = screen.GetComponent<MeshFilter> ();
 
-        if (otherPortal == null) {
+        if (otherPortal == null && this.isActiveAndEnabled) {
             Debug.LogError("Other portal is not assigned!");
         }
+        if (playerCamera == null) {
+            Debug.LogError("Player camera is not assigned!");
+        }
 
+        if (portalCamera == null) {
+            Debug.LogError("Portal camera is not assigned!");
+        }
+
+        if (screen == null) {
+            Debug.LogError("Screen is not assigned!");
+        }
+        if (screenMeshFilter == null) {
+            Debug.LogError("Screen mesh filter is not assigned!");
+        }
         
 
         // VisiblePortals = VisiblePortals.Where(p =>
@@ -99,18 +120,20 @@ public class PortalScript : MonoBehaviour
     void Start(){
         // layerScreen = screen.gameObject.layer;
         print("Layer: " + layerScreen);
-        var Portals = FindObjectsOfType<PortalScript>(true);
-        AllPortals = new Dictionary<string, VisiblePortal>();
-        for (int i = 0; i < Portals.Length; i++){
-            if (Portals[i] == this){
-                continue;
-            }
-            if(AllPortals.ContainsKey(Portals[i].name)){
-                Debug.LogError("Duplicate portal name: " + Portals[i].name);
-                continue;
-            }
-            AllPortals.Add(Portals[i].name, new VisiblePortal(Portals[i], false));
-        }
+        ConfigureScaleRatio();
+        
+        // var Portals = FindObjectsOfType<PortalScript>(true);
+        // AllPortals = new Dictionary<string, VisiblePortal>();
+        // for (int i = 0; i < Portals.Length; i++){
+        //     if (Portals[i] == this){
+        //         continue;
+        //     }
+        //     if(AllPortals.ContainsKey(Portals[i].name)){
+        //         Debug.LogError("Duplicate portal name: " + Portals[i].name);
+        //         continue;
+        //     }
+        //     AllPortals.Add(Portals[i].name, new VisiblePortal(Portals[i], false));
+        // }
     }
     // private void Update()
     // {
@@ -132,15 +155,10 @@ public class PortalScript : MonoBehaviour
                 var positionOld = travellerT.position;
                 var rotOld = travellerT.rotation;
 
-                Vector3 scaleRatio = new Vector3(
-                    otherPortal.transform.parent.localScale.x / transform.parent.localScale.x,
-                    otherPortal.transform.parent.localScale.y / transform.parent.localScale.y,
-                    otherPortal.transform.parent.localScale.z / transform.parent.localScale.z
-                );
                 traveller.Teleport(transform, otherPortal.transform, m.GetColumn(3), m.rotation, scaleRatio);
                 
                 traveller.graphicsClone.transform.SetPositionAndRotation (positionOld, rotOld);
-                otherPortal.OnTravellerEnterPortal(traveller);
+                otherPortal.OnTravellerEnterPortal(traveller, scaleRatio);
                 trackedTravellers.RemoveAt(i);
                 i--;
             }
@@ -150,6 +168,14 @@ public class PortalScript : MonoBehaviour
                 traveller.previousOffsetFromPortal = offsetFromPortal;
             }
         }
+    }
+
+    public void ConfigureScaleRatio(){
+        scaleRatio = new Vector3(
+            otherPortal.transform.parent.localScale.x / transform.parent.localScale.x,
+            otherPortal.transform.parent.localScale.y / transform.parent.localScale.y,
+            otherPortal.transform.parent.localScale.z / transform.parent.localScale.z
+        );
     }
 
     static bool isVisibileFromPlayerCamera(Renderer renderer, Camera camera){
@@ -215,7 +241,7 @@ public class PortalScript : MonoBehaviour
         //     }
         // }
 
-        if (!CameraUtility.VisibleFromCamera(otherPortal.screen, playerCamera))
+        if (!CameraUtility.VisibleFromCamera(otherPortal.screen, playerCamera, transform.parent.parent.name))
         {
             return;
         }
@@ -262,7 +288,16 @@ public class PortalScript : MonoBehaviour
             portalCamera.transform.SetPositionAndRotation(renderPositions[i], renderRotations[i]);
             SetNearClipPlane();
             HandleCliping();
-            UniversalRenderPipeline.RenderSingleCamera(context, portalCamera);
+            try
+            {
+                UniversalRenderPipeline.RenderSingleCamera(context, portalCamera);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error rendering portal camera on {gameObject.name}:  + {e.Message}");
+                return;
+            }
+            // UniversalRenderPipeline.RenderSingleCamera(context, portalCamera);
 
             if (i == startIndex)
             {
@@ -495,8 +530,40 @@ public class PortalScript : MonoBehaviour
         otherPortal.screen.material = mat;
 
         materialSetup = true; // Mark material as set up
+        // Debug.Log("Material setup complete: " + transform.parent.parent.parent.name + "-" + transform.parent.parent.name);
     }
 
+    public void DeactivatePortal(Material material = null){
+        // if(this.enabled == false){
+        //     return;
+        // }
+        materialSetup = false;
+        if (portalCamera.targetTexture != null)
+        {
+            RenderTexture.ReleaseTemporary(portalCamera.targetTexture);
+            portalCamera.targetTexture = null;
+            screen.material = material;
+        }
+        this.enabled = false;
+    }
+
+    public void SwitchPortal(PortalScript newPortal){
+        if (newPortal == null || newPortal == this) return;
+
+        otherPortal = newPortal;
+        materialSetup = false;
+        if (portalCamera.targetTexture != null)
+        {
+            RenderTexture.ReleaseTemporary(portalCamera.targetTexture);
+            portalCamera.targetTexture = null;
+            screen.material = null;
+        }
+        ConfigureScaleRatio();
+        // otherPortal.enabled = true;
+        // otherPortal.CreateTexture();
+        // otherPortal.SetNearClipPlane();
+        // otherPortal.HandleCliping();
+    }
 
     public PortalScript GetOtherPortal(){
         return otherPortal;
@@ -504,9 +571,9 @@ public class PortalScript : MonoBehaviour
     
     
 
-    void OnTravellerEnterPortal (PortalTraveller traveller) {
+    void OnTravellerEnterPortal (PortalTraveller traveller, Vector3 scale) {
         if (!trackedTravellers.Contains (traveller)) {
-            traveller.EnterPortalThreshold ();
+            traveller.EnterPortalThreshold (scale);
             traveller.previousOffsetFromPortal = traveller.transform.position - transform.position;
             trackedTravellers.Add (traveller);
         }
@@ -515,7 +582,7 @@ public class PortalScript : MonoBehaviour
     void OnTriggerEnter (Collider other) {
         var traveller = other.GetComponent<PortalTraveller> ();
         if (traveller) {
-            OnTravellerEnterPortal (traveller);
+            OnTravellerEnterPortal (traveller, scaleRatio);
         }
     }
 
@@ -532,11 +599,11 @@ public class PortalScript : MonoBehaviour
             return portalCamera.transform.position;
         }
     }
-    void OnValidate () {
-        if (otherPortal != null) {
-            otherPortal.otherPortal = this;
-        }
-    }
+    // void OnValidate () {
+    //     if (otherPortal != null) {
+    //         otherPortal.otherPortal = this;
+    //     }
+    // }
 
     bool SameSideOfPortal (Vector3 posA, Vector3 posB) {
         return SideOfPortal (posA) == SideOfPortal (posB);

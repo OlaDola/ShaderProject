@@ -19,7 +19,7 @@ public class PortalTraveller : MonoBehaviour
         transform.localScale = scale;
     }
 
-    public virtual void EnterPortalThreshold()
+    public virtual void EnterPortalThreshold(Vector3 scale)
     {
         if (graphicsClone == null) {
             graphicsClone = Instantiate (graphicsObject);
@@ -29,12 +29,14 @@ public class PortalTraveller : MonoBehaviour
             cloneMaterials = GetMaterials (graphicsClone);
         } else {
             graphicsClone.SetActive (true);
+            graphicsClone.transform.localScale = Vector3.Scale(transform.parent.localScale, scale);
         }
     }
 
     public virtual void ExitPortalThreshold()
     {
         graphicsClone.SetActive (false);
+        graphicsClone.transform.localScale = transform.parent.localScale;
         // Disable slicing
         for (int i = 0; i < originalMaterials.Length; i++) {
             originalMaterials[i].SetVector ("sliceNormal", Vector3.zero);

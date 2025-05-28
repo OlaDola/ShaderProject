@@ -12,6 +12,7 @@ public class MainCameraRender : MonoBehaviour
     private void Awake()
     {
         portals = FindObjectsOfType<PortalScript>();
+
     }
 
     private void OnEnable()
@@ -37,15 +38,18 @@ public class MainCameraRender : MonoBehaviour
         {
             for (int i = 0; i < portals.Length; i++)
             {
-                portals[i].PrePortalRender();
+                if(portals[i].isActiveAndEnabled)
+                    portals[i].PrePortalRender();
             }
             for (int i = 0; i < portals.Length; i++)
             {
-                portals[i].Render(context);
+                if(portals[i].isActiveAndEnabled)
+                    portals[i].Render(context);
             }
             for (int i = 0; i < portals.Length; i++)
             {
-                portals[i].PostPortalRender();
+                if(portals[i].isActiveAndEnabled)
+                    portals[i].PostPortalRender();
             }
         }
     }

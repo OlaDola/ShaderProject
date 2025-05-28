@@ -7,7 +7,7 @@ public class FPSController : PortalTraveller {
     public float walkSpeed = 3;
     public float runSpeed = 6;
     public float smoothMoveTime = 0.1f;
-    public float jumpForce = 8;
+    public float jumpForce = 5;
     public float gravity = 18;
 
     public bool lockCursor;
@@ -42,6 +42,8 @@ public class FPSController : PortalTraveller {
 
     public bool doTeleport = true;
 
+    [SerializeField] IsGrounded groundCheck;
+
     void Start () {
         cam = Camera.main;
         if (lockCursor) {
@@ -58,56 +60,61 @@ public class FPSController : PortalTraveller {
         smoothPitch = pitch;
     }
 
-    void FixedUpdate () {
-        if (Input.GetKeyDown (KeyCode.P)) {
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.P)) {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-            Debug.Break ();
+            Debug.Break();
         }
-        if (Input.GetKeyDown (KeyCode.O)) {
+        if (Input.GetKeyDown(KeyCode.O)) {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             disabled = !disabled;
         }
+        if (Input.GetKeyDown(KeyCode.L)) {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        if (IsGrounded() && Input.GetKeyDown(KeyCode.Space)) {
+            jumping = true;
+        }
+    }
+
+    void FixedUpdate () {
 
         if (disabled) {
             return;
         }
 
-        Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
+        Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
-        Vector3 inputDir = new Vector3 (input.x, 0, input.y).normalized;
-        Vector3 worldInputDir = transform.TransformDirection (inputDir);
+        Vector3 inputDir = new Vector3(input.x, 0, input.y).normalized;
+        Vector3 worldInputDir = transform.TransformDirection(inputDir);
 
-        float currentSpeed = (Input.GetKey (KeyCode.LeftShift)) ? runSpeed : walkSpeed;
+        float currentSpeed = (Input.GetKey(KeyCode.LeftShift)) ? runSpeed * playerParent.transform.localScale.x : walkSpeed * playerParent.transform.localScale.x;
+        
         Vector3 targetVelocity = worldInputDir * currentSpeed;
-        velocity = Vector3.SmoothDamp (velocity, targetVelocity, ref smoothV, smoothMoveTime);
-        if(Vector3.Distance(transform.position, velocity*Time.fixedDeltaTime)<0.001f ){
+        velocity = Vector3.SmoothDamp(velocity, targetVelocity, ref smoothV, smoothMoveTime);
+
+        if (Vector3.Distance(transform.position, velocity * Time.fixedDeltaTime) < 0.001f) {
             velocity = Vector3.zero;
         }
-        rb.MovePosition(transform.position + velocity * Time.fixedDeltaTime);
 
+        if(jumping){
+            rb.AddRelativeForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            jumping = false;
+        }
 
-        // var flags = controller.Move (velocity * Time.deltaTime);
-        // if (flags == CollisionFlags.Below) {
-        //     jumping = false;
-        //     lastGroundedTime = Time.time;
-        //     verticalVelocity = 0;
-        // }
+        Vector3 moveDelta = velocity * Time.fixedDeltaTime;
 
-        // if (Input.GetKeyDown (KeyCode.Space)) {
-        //     float timeSinceLastTouchedGround = Time.time - lastGroundedTime;
-        //     if (controller.isGrounded || (!jumping && timeSinceLastTouchedGround < 0.15f)) {
-        //         jumping = true;
-        //         verticalVelocity = jumpForce;
-        //     }
-        // }
+        rb.MovePosition(rb.position + moveDelta);
 
-        float mX = Input.GetAxisRaw ("Mouse X");
-        float mY = Input.GetAxisRaw ("Mouse Y");
+        float mX = Input.GetAxisRaw("Mouse X");
+        float mY = Input.GetAxisRaw("Mouse Y");
 
-        // Verrrrrry gross hack to stop camera swinging down at start
-        float mMag = Mathf.Sqrt (mX * mX + mY * mY);
+        float mMag = Mathf.Sqrt(mX * mX + mY * mY);
         if (mMag > 5) {
             mX = 0;
             mY = 0;
@@ -116,13 +123,16 @@ public class FPSController : PortalTraveller {
         yaw += mX * mouseSensitivity;
         yaw = NormalizeAngle(yaw);
         pitch -= mY * mouseSensitivity;
-        pitch = Mathf.Clamp (pitch, pitchMinMax.x, pitchMinMax.y);
-        smoothPitch = Mathf.SmoothDampAngle (smoothPitch, pitch, ref pitchSmoothV, rotationSmoothTime);
-        smoothYaw = Mathf.SmoothDampAngle (smoothYaw, yaw, ref yawSmoothV, rotationSmoothTime);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+        smoothPitch = Mathf.SmoothDampAngle(smoothPitch, pitch, ref pitchSmoothV, rotationSmoothTime);
+        smoothYaw = Mathf.SmoothDampAngle(smoothYaw, yaw, ref yawSmoothV, rotationSmoothTime);
 
         transform.localEulerAngles = Vector3.up * smoothYaw;
         cam.transform.localEulerAngles = Vector3.right * smoothPitch;
+    }
 
+    bool IsGrounded() {
+       return groundCheck.isGrounded;
     }
 
     public override void Teleport (Transform fromPortal, Transform toPortal, Vector3 pos, Quaternion rot, Vector3 scale) {
@@ -134,6 +144,7 @@ public class FPSController : PortalTraveller {
         playerParent.transform.rotation = portalRotationDifference * playerParent.transform.rotation;
         playerParent.transform.position = pos;
         playerParent.transform.localScale = Vector3.Scale(playerParent.transform.localScale, scale);
+
 
         Vector3 eulerRot = rot.eulerAngles;
         float delta = Mathf.DeltaAngle (smoothYaw, eulerRot.y);

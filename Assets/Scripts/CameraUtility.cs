@@ -13,9 +13,14 @@ public static class CameraUtility {
     };
 
     // http://wiki.unity3d.com/index.php/IsVisibleFrom
-    public static bool VisibleFromCamera (Renderer renderer, Camera camera) {
-        Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes (camera);
-        return GeometryUtility.TestPlanesAABB (frustumPlanes, renderer.bounds);
+    public static bool VisibleFromCamera (Renderer renderer, Camera camera, string gameobject) {
+        try {
+            Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
+            return GeometryUtility.TestPlanesAABB(frustumPlanes, renderer.bounds);
+        } catch (System.Exception ex) {
+            Debug.LogError($"Error while checking visibility for object: {gameobject} . Exception: {ex}");
+            return false;
+        }
     }
 
     public static bool BoundsOverlap (MeshFilter nearObject, MeshFilter farObject, Camera camera) {

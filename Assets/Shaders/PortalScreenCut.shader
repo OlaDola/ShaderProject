@@ -66,9 +66,16 @@ Shader "Unlit/PortalShaderCut"
 
 				float4 frag(v2f i) : SV_Target
 				{
+					// Ensure screenPos.w is valid to avoid division by zero
+					if (i.screenPos.w <= 0.00001)
+					{
+						return float4(0, 0, 0, 1); // Return a default color (black) for invalid positions
+					}
+
 					float2 uv = i.screenPos.xy / i.screenPos.w;
+					uv = saturate(uv); // Clamp UV coordinates to [0, 1]
 					float4 col = tex2D(_MainTex, uv);
-					return col * displayMask + _InactiveColour * (1-displayMask);
+					return col * displayMask + _InactiveColour * (1 - displayMask);
 				}
 			ENDHLSL
         }

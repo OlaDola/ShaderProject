@@ -289,7 +289,7 @@ MonoBehaviour:
   gravity: 18
   lockCursor: 0
   mouseSensitivity: 11
-  pitchMinMax: {x: -40, y: 85}
+  pitchMinMax: {x: -85, y: 85}
   rotationSmoothTime: 0.1
   playerParent: {fileID: 0}
   yaw: 0
