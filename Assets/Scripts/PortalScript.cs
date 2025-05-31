@@ -8,21 +8,6 @@ using UnityEngine.Rendering.Universal;
 
 public class PortalScript : MonoBehaviour
 {
-    [System.Serializable]
-    class VisiblePortal{
-        public PortalScript portal;
-        public bool isVisible;
-        public PortalScript visibileFromPortal;
-
-        // public string name;
-        public VisiblePortal(PortalScript portal, bool isVisible, PortalScript visibileFromPortal = null){
-            this.visibileFromPortal = visibileFromPortal;
-            this.portal = portal;
-            this.isVisible = isVisible;
-
-            // name = portal.name;
-        }
-    }
 
     [SerializeField]
     PortalScript otherPortal;
@@ -57,12 +42,6 @@ public class PortalScript : MonoBehaviour
     MeshFilter screenMeshFilter;
     [SerializeField]
     Vector3 offsetFromPortalToCam;
-    
-    [SerializeField]
-    Dictionary<string, VisiblePortal> AllPortals;
-
-    // [SerializeField]
-    // string[] visiblePortalNames;
 
     [SerializeField]
     LayerMask layerScreen;
@@ -107,39 +86,14 @@ public class PortalScript : MonoBehaviour
             Debug.LogError("Screen mesh filter is not assigned!");
         }
         
-
-        // VisiblePortals = VisiblePortals.Where(p =>
-        // {
-        //     if (this == p)
-        //         return false;
-
-        //     return CanSee(portalCamera, p, true);
-        // }).ToArray();
     }
 
     void Start(){
         // layerScreen = screen.gameObject.layer;
         print("Layer: " + layerScreen);
         ConfigureScaleRatio();
-        
-        // var Portals = FindObjectsOfType<PortalScript>(true);
-        // AllPortals = new Dictionary<string, VisiblePortal>();
-        // for (int i = 0; i < Portals.Length; i++){
-        //     if (Portals[i] == this){
-        //         continue;
-        //     }
-        //     if(AllPortals.ContainsKey(Portals[i].name)){
-        //         Debug.LogError("Duplicate portal name: " + Portals[i].name);
-        //         continue;
-        //     }
-        //     AllPortals.Add(Portals[i].name, new VisiblePortal(Portals[i], false));
-        // }
+
     }
-    // private void Update()
-    // {
-    //     var m = transform.localToWorldMatrix * otherPortal.transform.worldToLocalMatrix * playerCamera.transform.localToWorldMatrix;
-    //     portalCamera.transform.SetPositionAndRotation(m.GetColumn(3), m.rotation);
-    // }
 
     void LateUpdate(){
         for (int i = 0; i < trackedTravellers.Count; i++){
@@ -217,29 +171,6 @@ public class PortalScript : MonoBehaviour
 
     public void Render(ScriptableRenderContext context)
     {
-        // bool isVisible;
-        // foreach (var portal in AllPortals)
-        // {
-        //     if (portal.Value.portal != this)
-        //     {
-        //         isVisible = CanSeePortal(otherPortal.portalCamera, portal.Value.portal);
-        //         if (isVisible)
-        //         {
-        //             portal.Value.isVisible = true;
-        //             portal.Value.visibileFromPortal = this;
-        //             portal.Value.portal.isVisible = true;
-        //         }
-        //         else
-        //         {
-        //             if (portal.Value.visibileFromPortal == this)
-        //             {
-        //                 portal.Value.isVisible = false;
-        //                 portal.Value.visibileFromPortal = null;
-        //                 portal.Value.portal.isVisible = false;
-        //             }
-        //         }
-        //     }
-        // }
 
         if (!CameraUtility.VisibleFromCamera(otherPortal.screen, playerCamera, transform.parent.parent.name))
         {
@@ -272,14 +203,6 @@ public class PortalScript : MonoBehaviour
             startIndex = renderOrderIndex;
         }
 
-        // foreach (var portal in AllPortals)
-        // {
-        //     if (portal.Value.portal != this && portal.Value.isVisible)
-        //     {
-        //         RenderRecursive(context, portal.Value.portal, recursionLimit - 1);
-        //     }
-        // }
-
         screen.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
         otherPortal.screen.material.SetInt("_DisplayMask", 0);
 
@@ -306,32 +229,6 @@ public class PortalScript : MonoBehaviour
         }
 
         screen.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-    }
-
-    private void RenderRecursive(ScriptableRenderContext context, PortalScript portal, int remainingRecursions)
-    {
-        if (remainingRecursions <= 0 || !portal.isVisible)
-        {
-            return;
-        }
-
-        var portalCameraL_T_W_Matrix = portal.otherPortal.transform.localToWorldMatrix * portal.transform.worldToLocalMatrix * otherPortal.portalCamera.transform.localToWorldMatrix;
-        var portalCamPos = portalCameraL_T_W_Matrix.GetColumn(3);
-        var portalCamRot = portalCameraL_T_W_Matrix.rotation;
-
-        portal.otherPortal.portalCamera.transform.SetPositionAndRotation(portalCamPos, portalCamRot);
-        portal.otherPortal.SetNearClipPlane();
-        portal.otherPortal.HandleCliping();
-
-        UniversalRenderPipeline.RenderSingleCamera(context, portal.otherPortal.portalCamera);
-
-        foreach (var subPortal in portal.AllPortals)
-        {
-            if (subPortal.Value.portal != portal && subPortal.Value.isVisible)
-            {
-                RenderRecursive(context, subPortal.Value.portal, remainingRecursions - 1);
-            }
-        }
     }
 
     void HandleCliping(){
