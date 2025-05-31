@@ -61,4 +61,6 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
-/Assets/Asset
+/Assets/Asset/SciFiLike Assets
+/plantuml
+/out
