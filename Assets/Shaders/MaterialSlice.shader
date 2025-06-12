@@ -97,5 +97,5 @@ Shader "Custom/SliceURP"
             ENDHLSL
         }
     }
-    FallBack "Hidden/InternalErrorShader"
+
 }

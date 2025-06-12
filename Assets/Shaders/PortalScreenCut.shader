@@ -77,8 +77,9 @@ Shader "Unlit/PortalShaderCut"
 					float4 col = tex2D(_MainTex, uv);
 					return col * displayMask + _InactiveColour * (1 - displayMask);
 				}
+				
 			ENDHLSL
         }
     }
-    Fallback "Hidden/InternalErrorShader"
+
 }

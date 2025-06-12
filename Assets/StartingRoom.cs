@@ -11,12 +11,25 @@ public class StartingRoom : MonoBehaviour
     Transform startingPoint;
 
 
+    [SerializeField]
+    private AudioClip MenuMusic;
+
+    private AudioSource audioSource;
+
     void Start()
     {
-        
-        if (player != null && startingPoint != null)
+        InitializeAudioSource();
+        if (MenuMusic != null)
         {
-            player.transform.position = startingPoint.position;
+            audioSource.clip = MenuMusic;
+            audioSource.loop = true;
+            audioSource.volume = 0.05f; // Set volume to a reasonable level
+            audioSource.Play();
         }
+    }
+    private void InitializeAudioSource()
+    {
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = true;
     }
 }

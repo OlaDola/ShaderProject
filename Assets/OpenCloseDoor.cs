@@ -49,6 +49,7 @@ public class OpenCloseDoor : MonoBehaviour
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.clip = doorSound;
             audioSource.loop = true;
+            audioSource.volume = 0.2f; // Set volume to a reasonable level
             audioSource.playOnAwake = false;
         }
         if(isDoorOpen)

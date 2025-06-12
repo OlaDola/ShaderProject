@@ -12,6 +12,11 @@ public class CardSlideDoor : CardSlide
     [SerializeField]
     public bool isLevelComplete = false;
 
+    [SerializeField]
+    private AudioClip accessDeniedClip; // Add this line
+
+    private AudioSource audioSource; // Add this line
+
     private PortalScript levelEndPortalScript;
     private PortalScript levelSelectorPortalScript;
 
@@ -35,6 +40,15 @@ public class CardSlideDoor : CardSlide
         if (levelSelectorPortalScript == null)
         {
             Debug.LogError("PortalLevelSelector component not found in LevelSelector.");
+        }
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false; // Ensure it doesn't play automatically
+            audioSource.loop = false; // Set to false if you don't want it to loop
+            audioSource.volume = 0.5f; // Set a reasonable volume
         }
     }
 
@@ -75,6 +89,11 @@ public class CardSlideDoor : CardSlide
                 {
                     materials[1] = panelColorWrong;
                     Debug.Log("Card is not correct, please try again.");
+                    // Play denied sound if level is not complete
+                    if (accessDeniedClip != null && audioSource != null)
+                    {
+                        audioSource.PlayOneShot(accessDeniedClip);
+                    }
                 }
             }
             else

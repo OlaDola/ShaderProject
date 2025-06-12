@@ -42,6 +42,8 @@ public class FPSController : PortalTraveller {
 
     public bool doTeleport = true;
 
+    public bool isReseting = false;
+
     [SerializeField] IsGrounded groundCheck;
 
     void Start () {
@@ -87,13 +89,19 @@ public class FPSController : PortalTraveller {
         if (disabled) {
             return;
         }
+        if (isReseting)
+        {
+            rb.velocity = Vector3.zero;
+            return;
+        }
 
         Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
         Vector3 inputDir = new Vector3(input.x, 0, input.y).normalized;
         Vector3 worldInputDir = transform.TransformDirection(inputDir);
 
-        float currentSpeed = (Input.GetKey(KeyCode.LeftShift)) ? runSpeed * playerParent.transform.localScale.x : walkSpeed * playerParent.transform.localScale.x;
+        float currentSpeed = (Input.GetKey(KeyCode.LeftShift)) ? runSpeed * playerParent.transform.localScale.x :
+                                                                    walkSpeed * playerParent.transform.localScale.x;
         
         Vector3 targetVelocity = worldInputDir * currentSpeed;
         velocity = Vector3.SmoothDamp(velocity, targetVelocity, ref smoothV, smoothMoveTime);
@@ -102,14 +110,10 @@ public class FPSController : PortalTraveller {
             velocity = Vector3.zero;
         }
 
-        if(jumping){
-            rb.AddRelativeForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            jumping = false;
-        }
-
         Vector3 moveDelta = velocity * Time.fixedDeltaTime;
 
-        rb.MovePosition(rb.position + moveDelta);
+        if(velocity != Vector3.zero)
+            rb.MovePosition(rb.position + moveDelta);
 
         float mX = Input.GetAxisRaw("Mouse X");
         float mY = Input.GetAxisRaw("Mouse Y");
@@ -144,13 +148,13 @@ public class FPSController : PortalTraveller {
         playerParent.transform.rotation = portalRotationDifference * playerParent.transform.rotation;
         playerParent.transform.position = pos;
         playerParent.transform.localScale = Vector3.Scale(playerParent.transform.localScale, scale);
-
+        velocity = toPortal.TransformVector (fromPortal.InverseTransformVector (velocity));
 
         Vector3 eulerRot = rot.eulerAngles;
         float delta = Mathf.DeltaAngle (smoothYaw, eulerRot.y);
         
         // transform.localEulerAngles = Vector3.up * smoothYaw;
-        velocity = toPortal.TransformVector (fromPortal.InverseTransformVector (velocity));
+        
         Physics.SyncTransforms ();
     }
     float NormalizeAngle(float angle) {

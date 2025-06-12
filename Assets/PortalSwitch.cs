@@ -9,6 +9,15 @@ public class PortalSwitch : MonoBehaviour
     public Material defaultMaterial;
 
     [SerializeField]
+    GameObject crossHairGreenUI;
+
+    [SerializeField]
+    GameObject leftMouseButtonUI;
+
+    [SerializeField]
+    GameObject rightMouseButtonUI;
+
+    [SerializeField]
     PortalScript portal1;
     [SerializeField]
     PortalScript portal1OtherSide;
@@ -43,36 +52,59 @@ public class PortalSwitch : MonoBehaviour
     void Update()
     {
         (bool isLookingAtPortal, PortalScript portal) = IsPlayerLookingAtPortal();
-        if(isLookingAtPortal)
+        if (isLookingAtPortal)
         {
-            if(Input.GetMouseButtonDown(0) && portal!= portal2){
+            if (crossHairGreenUI != null && !crossHairGreenUI.activeSelf)
+            {
+                crossHairGreenUI.SetActive(true);
+            }
+            if (Input.GetMouseButtonDown(0) && portal != portal2)
+            {
+                if (leftMouseButtonUI != null && !leftMouseButtonUI.activeSelf)
+                {
+                    leftMouseButtonUI.SetActive(true);
+                }
                 portal1 = portal;
                 portal1OtherSide = portal.OtherPortal;
                 portal1Set = true;
                 ActivatePortal();
             }
-            if(Input.GetMouseButtonDown(1) && portal!= portal1){
+            if (Input.GetMouseButtonDown(1) && portal != portal1)
+            {
+                if (rightMouseButtonUI != null && !rightMouseButtonUI.activeSelf)
+                {
+                    rightMouseButtonUI.SetActive(true);
+                }
                 portal2 = portal;
                 portal2OtherSide = portal.OtherPortal;
                 portal2Set = true;
                 ActivatePortal();
             }
         }
+        else
+        {
+            if (crossHairGreenUI != null && crossHairGreenUI.activeSelf)
+            {
+                crossHairGreenUI.SetActive(false);
+            }
+        }
     }
 
     private void ActivatePortal()
     {
-        if(portal1Set && portal2Set)
+        if (portal1Set && portal2Set)
         {
             portal1.SwitchPortal(portal2);
-            if(portal1OtherSide != null && portal1OtherSide != portal2){
+            if (portal1OtherSide != null && portal1OtherSide != portal2)
+            {
                 portal1OtherSide.DeactivatePortal();
                 portal1OtherSide.transform.Find("PerfectSquarePortal/Screen").GetComponent<MeshCollider>().enabled = true;
                 portal1OtherSide.transform.Find("PerfectSquarePortal/Screen").GetComponent<MeshRenderer>().material = defaultMaterial;
             }
-                
+
             portal2.SwitchPortal(portal1);
-            if(portal2OtherSide != null && portal2OtherSide != portal1){
+            if (portal2OtherSide != null && portal2OtherSide != portal1)
+            {
                 portal2OtherSide.DeactivatePortal();
                 portal2OtherSide.transform.Find("PerfectSquarePortal/Screen").GetComponent<MeshCollider>().enabled = true;
                 portal2OtherSide.transform.Find("PerfectSquarePortal/Screen").GetComponent<MeshRenderer>().material = defaultMaterial;
@@ -99,6 +131,19 @@ public class PortalSwitch : MonoBehaviour
             portal2Set = false;
             portal1 = null;
             portal2 = null;
+
+            if (crossHairGreenUI != null)
+            {
+                crossHairGreenUI.SetActive(false);
+            }
+            if (leftMouseButtonUI != null)
+            {
+                leftMouseButtonUI.SetActive(false);
+            }
+            if (rightMouseButtonUI != null)
+            {
+                rightMouseButtonUI.SetActive(false);
+            }
         }
     }
 

@@ -42,7 +42,7 @@ public class CardSlide : MonoBehaviour
 
     private void Update()
     {
-        if (IsPlayerCloseEnough() && IsPlayerLookingAtPortal())
+        if (IsPlayerCloseEnough() && IsPlayerLookingAtPanel())
         {
             if (Input.GetKeyDown(KeyCode.E))
             {
@@ -51,7 +51,7 @@ public class CardSlide : MonoBehaviour
         }
     }
 
-    private bool IsPlayerLookingAtPortal()
+    private bool IsPlayerLookingAtPanel()
     {
         Ray ray = new Ray(player.position, player.forward);
 
@@ -60,17 +60,17 @@ public class CardSlide : MonoBehaviour
             Debug.DrawLine(player.position, hit.point, Color.red, 0.1f);
             if (hit.transform == transform)
             {
-                return true; // Ray hit the portal
+                return true; // Ray hit the panel
             }
         }
 
-        return false; // Ray did not hit the portal
+        return false; // Ray did not hit the panel
     }
 
     private bool IsPlayerCloseEnough()
     {
-        float distanceToPortal = Vector3.Distance(player.position, transform.position);
-        return distanceToPortal <= activationDistance;
+        float distanceToPanel = Vector3.Distance(player.position, transform.position);
+        return distanceToPanel <= activationDistance;
     }
 
     protected virtual void ActivateCardSlideMechanic()

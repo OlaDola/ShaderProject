@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="PortalScript">
+    <Position X="42" Y="1.25" Width="2.75" />
+    <Members>
+      <Method Name="Awake" Hidden="true" />
+      <Method Name="CanSeePortal" Hidden="true" />
+      <Method Name="HandleCliping" Hidden="true" />
+      <Method Name="IsValidProjectionMatrix" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <AssociationLine Name="OtherPortal" Type="PortalScript" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="42.412" Y="9.54" />
+        <Point X="42.412" Y="10.487" />
+        <Point X="43.794" Y="10.487" />
+        <Point X="43.794" Y="9.54" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.179" Y="0.367" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>GAAAACBAAKAAQAIAABkBcIRAAEAAQIywWhEAISIAAUE=</HashCode>
+      <FileName>Assets\Scripts\PortalScript.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="portalCamera" />
+      <Field Name="playerCamera" />
+      <Property Name="OtherPortal" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CameraUtility">
+    <Position X="36.25" Y="4.5" Width="1.5" />
+    <NestedTypes>
+      <Struct Name="CameraUtility.MinMax3D" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Assets\Scripts\CameraUtility.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAQAAAAAgAAAAAAAAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\CameraUtility.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PortalTraveller">
+    <Position X="29.75" Y="2.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>ggAAAEAEAAAAAIAAAgAAAAAAAAACAAAAgAAABgAAAAA=</HashCode>
+      <FileName>Assets\Scripts\PortalTraveller.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FPSController">
+    <Position X="32.75" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>kAQABAgAIyAQAIEGAAYACgAAAAAACEgBAAQgXIAAAgk=</HashCode>
+      <FileName>Assets\StarterAssets\FirstPersonController\Scripts\FPSController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CardSlide">
+    <Position X="22.25" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAQCAAQgQAADABAAAAAAAAAAABAAAIkAAAAAA=</HashCode>
+      <FileName>Assets\CardSlide.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CardSlideCheckList">
+    <Position X="20" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAACAABkAAAQCAAAAAAAAAAgAAAAAAAAAEAAA=</HashCode>
+      <FileName>Assets\CardSlideCheckList.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CardSlideDoor">
+    <Position X="22.25" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAACAAggAAEQAAAAAAAAAAAAFAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\CardSlideDoor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CardSlidePortalSwap">
+    <Position X="24.5" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAiAAAABAAAAAAAAQAEACAAAgAAAAAAA=</HashCode>
+      <FileName>Assets\CardSlidePortalSwap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PortalSwitch">
+    <Position X="39" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgQAAAAABCAAQCAAAABAAAAAAAAQAEADAAAgEEAAAAA=</HashCode>
+      <FileName>Assets\PortalSwitch.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="portal1" />
+      <Field Name="portal2" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="UnityEngine.Camera" Collapsed="true">
+    <Position X="46.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="PortalRotation">
+    <Position X="39" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAGCAAAAACAAAAAAAAAAAAEABAABAEAQAEAA=</HashCode>
+      <FileName>Assets\PortalRotation.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

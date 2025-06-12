@@ -9,6 +9,12 @@ public class TriggerLevelActive : MonoBehaviour
     [SerializeField]
     private GameObject levelObjects;
 
+    [SerializeField]
+    private Transform levelResetPosition;
+
+    [SerializeField]
+    private Transform levelSelectorPosition;
+
     void Start()
     {
         levelObjects = transform.parent.gameObject;
@@ -19,6 +25,9 @@ public class TriggerLevelActive : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            // Reset the player's position if needed
+            other.GetComponentInChildren<ResetPosition>().SetPosition(levelResetPosition.position);
+
             GameObject player = Camera.main.transform.parent.gameObject;
             if (player != null)
             {
@@ -35,7 +44,9 @@ public class TriggerLevelActive : MonoBehaviour
     void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Player"))
-        {   
+        {
+            // Reset the player's position if needed
+            other.GetComponentInChildren<ResetPosition>().SetPosition(levelSelectorPosition.position);
             GameObject player = Camera.main.transform.parent.gameObject;
             if (player != null)
             {

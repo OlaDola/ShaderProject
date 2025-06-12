@@ -11,6 +11,10 @@ public class PortalRotation : MonoBehaviour
 
     [SerializeField] Transform player;
 
+    [Header("Audio")]
+    [SerializeField] AudioSource rotationAudioSource;
+    [SerializeField] AudioClip rotationClip;
+
     private bool isRotating = false;
     private Transform currentTargetPortal;
 
@@ -20,6 +24,13 @@ public class PortalRotation : MonoBehaviour
         {
             player = Camera.main.transform;
         }
+        if (rotationAudioSource == null)
+        {
+            rotationAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+        rotationAudioSource.loop = true;
+        rotationAudioSource.playOnAwake = false;
+        rotationAudioSource.clip = rotationClip;
     }
 
     void Update()
@@ -73,6 +84,12 @@ public class PortalRotation : MonoBehaviour
     private IEnumerator RotatePortal(Transform portal, float angle)
     {
         isRotating = true;
+        // Play rotation sound
+        if (rotationAudioSource != null && rotationClip != null)
+        {
+            rotationAudioSource.Play();
+        }
+
         Quaternion startRotation = portal.parent.rotation;
         Quaternion endRotation = startRotation * Quaternion.AngleAxis(angle, portal.forward);
         float elapsedTime = 0f;
@@ -87,5 +104,11 @@ public class PortalRotation : MonoBehaviour
 
         portal.parent.rotation = endRotation;
         isRotating = false;
+
+        // Stop rotation sound
+        if (rotationAudioSource != null)
+        {
+            rotationAudioSource.Stop();
+        }
     }
 }
