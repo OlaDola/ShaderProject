@@ -8,6 +8,12 @@ public class TriggerDisableLevel2 : MonoBehaviour
 
     private Level2Mechanic level2Mechanic;
 
+    [SerializeField]
+    private Transform levelResetPosition;
+
+    [SerializeField]
+    private Transform levelSelectorPosition;
+
     void Start()
     {
         level2Mechanic = transform.parent.GetComponent<Level2Mechanic>();
@@ -17,10 +23,20 @@ public class TriggerDisableLevel2 : MonoBehaviour
         }
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            other.GetComponentInChildren<ResetPosition>().SetPosition(levelResetPosition.position);
+            Debug.Log("Level 2 activated.");
+        }
+    }
+
     void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Player"))
         {
+            other.GetComponentInChildren<ResetPosition>().SetPosition(levelSelectorPosition.position);
             level2Mechanic.DisableLevel();
             Debug.Log("Level 2 deactivated.");
         }

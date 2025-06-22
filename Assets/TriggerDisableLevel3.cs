@@ -13,6 +13,12 @@ public class TriggerDisableLevel3 : MonoBehaviour
     [SerializeField]
     private GameObject crossHairUI;
 
+    [SerializeField]
+    private Transform levelResetPosition;
+
+    [SerializeField]
+    private Transform levelSelectorPosition;
+
     void Start()
     {
         level3Mechanic = transform.parent.GetComponent<Level3Mechanic>();
@@ -31,6 +37,7 @@ public class TriggerDisableLevel3 : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            other.GetComponentInChildren<ResetPosition>().SetPosition(levelResetPosition.position);
             crossHairUI.SetActive(true); // Show the crosshair UI
             portalSwitch.enabled = true; // Enable the portal switch
             Debug.Log("Level 3 activated.");
@@ -41,6 +48,7 @@ public class TriggerDisableLevel3 : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            other.GetComponentInChildren<ResetPosition>().SetPosition(levelSelectorPosition.position);
             level3Mechanic.DisableLevel();
             portalSwitch.enabled = false; // Disable the portal switch
             crossHairUI.SetActive(false); // Hide the crosshair UI

@@ -17,6 +17,10 @@ public class CardSlidePortalSwap: CardSlide
     [SerializeField]
     private Material defaultMaterial;
 
+    [SerializeField]
+    AudioClip portalSwitchSound;
+    private AudioSource audioSource;
+
 
     protected override void Start()
     {
@@ -27,7 +31,7 @@ public class CardSlidePortalSwap: CardSlide
             Debug.LogError("PortalScript component not found in parent object.");
         }
         portal1OtherSide = portal1.OtherPortal;
-        
+
         string cardName = gameObject.name.Replace("Panel_CardSlider_", "");
         portal2 = transform.parent.parent.parent.Find("Portal" + cardName).GetComponentInChildren<PortalScript>();
         if (portal2 == null)
@@ -35,6 +39,11 @@ public class CardSlidePortalSwap: CardSlide
             Debug.LogError("PortalScript component not found in parent object.");
         }
         portal2OtherSide = portal2.OtherPortal;
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.clip = portalSwitchSound;
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
 
     }
 
@@ -76,6 +85,8 @@ public class CardSlidePortalSwap: CardSlide
         {
             portal1.transform.parent.Rotate(0, 180, 0);
         }
+
+        audioSource.Play();
 
         portal1.enabled = true;
         portal1.transform.Find("PerfectSquarePortal/Screen").GetComponent<MeshCollider>().enabled = false;

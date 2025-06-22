@@ -24,6 +24,8 @@ public class MirrorLoading : MonoBehaviour
     private GameObject hatObject;
     [SerializeField] GameObject graduationObject;
 
+    [SerializeField] StartingRoom startingRoom;
+
     void Start()
     {
         if (mirrorTexture != null)
@@ -38,6 +40,7 @@ public class MirrorLoading : MonoBehaviour
             mirrorCamera.targetTexture = mirrorTexture;
             mirrorRenderer.material.mainTexture = mirrorTexture;
         }
+        startingRoom = FindObjectOfType<StartingRoom>();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -57,6 +60,7 @@ public class MirrorLoading : MonoBehaviour
                 {
                     hatObject.SetActive(true);
                 }
+                
             }
         }
     }
@@ -104,21 +108,11 @@ public class MirrorLoading : MonoBehaviour
 
         // Start increasing resolution
         yield return StartCoroutine(IncreaseResolutionCoroutine());
+        startingRoom.ReturnToMenu();
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player") && mirrorTexture != null)
-        {
-            if (increaseCoroutine != null)
-            {
-                StopCoroutine(increaseCoroutine);
-                increaseCoroutine = null;
-                isIncreasing = false;
-                // Do not reset elapsed, so it resumes where it left off
-            }
-        }
-    }
+
+
 
     private IEnumerator IncreaseResolutionCoroutine()
     {
@@ -161,7 +155,7 @@ public class MirrorLoading : MonoBehaviour
         isIncreasing = false;
         elapsed = increaseDuration; // Clamp to max
 
-        if(graduationObject != null)
+        if (graduationObject != null)
         {
             graduationObject.SetActive(true);
         }

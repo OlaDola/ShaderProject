@@ -412,7 +412,7 @@ public class PortalScript : MonoBehaviour
         }
         else
         {
-            mat = new Material(Shader.Find("Standard"));
+            mat = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
         }
 
         // Assign render texture to material

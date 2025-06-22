@@ -79,7 +79,7 @@ public class LevelSelector : MonoBehaviour
     {
         if (levelIndex < 1 || levelIndex > levels.Length) return; // Out of bounds check
 
-        if (levelIndex == 4)
+        if (levelIndex == 5)
         {
             GameObject level = levels[levelIndex-1];
             SetActivity(level, completedColor, completedMaterial, false);

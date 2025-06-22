@@ -39,14 +39,22 @@ public class PortalSwitch : MonoBehaviour
 
     int layerMask;
 
+    [SerializeField]
+    AudioClip portalSwitchSound;
+    AudioSource audioSource;
+
 
     void Start()
     {
-        if(player == null)
+        if (player == null)
         {
             player = Camera.main.transform;
         }
         layerMask = LayerMask.GetMask("Portal"); // Set the layer mask to include only the Portal layer
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.clip = portalSwitchSound;
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
     }
 
     void Update()
@@ -126,6 +134,8 @@ public class PortalSwitch : MonoBehaviour
 
             portal2.enabled = true;
             portal2.transform.Find("PerfectSquarePortal/Screen").GetComponent<MeshCollider>().enabled = false;
+
+            audioSource.Play();
 
             portal1Set = false;
             portal2Set = false;
